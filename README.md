@@ -1,80 +1,198 @@
-# 📘 Proyecto de Matemáticas
+# ¿Ahí es?
 
-## 👥 Integrantes
+Aplicación full stack para evaluar si una persona o situación cae en `Green Flag`, `Zona Gris` o `Red Flag` mediante un cuestionario dinámico con flujo condicional y un modelo matemático ponderado.
 
-- Dylan Piña
-- Emmanuel Villegas
-- Grace Hernández
-- Natasha Rodríguez
-- Otoniel González
+## Stack
 
----
+- Backend: FastAPI, SQLAlchemy, PostgreSQL, Alembic, Pydantic, python-dotenv
+- Frontend: Next.js App Router, TypeScript, Tailwind CSS
+- Infraestructura local: Docker Compose
 
-## 📖 Introducción
+## Estructura
 
-“¿Ahí es?” es una herramienta interactiva desarrollada para aplicar conceptos de lógica booleana y reglas de decisión en la evaluación de comportamientos dentro de un contexto relacional. El programa utiliza un cuestionario dinámico que analiza respuestas del usuario y asigna puntajes mediante operadores lógicos, permitiendo determinar si una persona representa una Green Flag o una Red Flag. El objetivo es ofrecer una evaluación estructurada basada en criterios lógicos para apoyar la toma de decisiones.
+```text
+.
+├── backend
+│   ├── alembic
+│   ├── app
+│   │   ├── api
+│   │   ├── core
+│   │   ├── db
+│   │   ├── models
+│   │   ├── schemas
+│   │   ├── services
+│   │   └── utils
+│   ├── scripts
+│   ├── .env.example
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend
+│   ├── app
+│   ├── components
+│   ├── lib
+│   ├── .env.example
+│   └── Dockerfile
+└── docker-compose.yml
+```
 
----
+## Modelo matemático
 
-## 🎯 Objetivo del Programa
+Dimensiones:
 
-Desarrollar una herramienta interactiva programada que, mediante el uso de lógica booleana y reglas de decisión, evalúe comportamientos y actitudes de una persona para determinar si representa una Green Flag o Red Flag, asignando puntajes y generando un veredicto final basado en las respuestas del usuario.
+- `comunicacion`
+- `respeto`
+- `coherencia`
+- `responsabilidad_afectiva`
+- `interes_real`
 
----
+Pesos:
 
-## ⚙️ Funcionalidades
+- `comunicacion = 0.20`
+- `respeto = 0.25`
+- `coherencia = 0.20`
+- `responsabilidad_afectiva = 0.25`
+- `interes_real = 0.10`
 
-- Cuestionario interactivo dinámico
-- Evaluación de respuestas mediante lógica booleana
-- Sistema de puntaje con Green Flags y Red Flags
-- Detección de contradicciones entre respuestas
-- Cálculo automático de porcentaje de viabilidad
-- Clasificación final (Green Flag / Red Flag)
-- Preguntas adaptativas según respuestas del usuario
-- Almacenamiento de preguntas y respuestas en base de datos
-- Evaluación lógica con operadores AND, OR y NOT
-- Resultado final claro e interactivo
+Fórmula:
 
----
+```text
+F = (comunicacion_normalizada * 0.20)
+  + (respeto_normalizado * 0.25)
+  + (coherencia_normalizada * 0.20)
+  + (responsabilidad_afectiva_normalizada * 0.25)
+  + (interes_real_normalizado * 0.10)
+```
 
-## 🧰 Tecnologías
+Clasificación:
 
-### Backend
+- `70 - 100`: Green Flag
+- `40 - 69.99`: Zona Gris
+- `0 - 39.99`: Red Flag
 
-- Python
-- FastAPI / Django (API lógica del sistema)
-- PostgreSQL (Base de datos)
-- SQLAlchemy / ORM
+La normalización se centraliza en [backend/app/core/config.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/core/config.py) mediante `DIMENSION_MIN_SCORE` y `DIMENSION_MAX_SCORE`, para que el rango sea fácil de ajustar.
 
-### Frontend
+## Backend
 
-- Next.js
-- React
-- Tailwind CSS
+### Funcionalidades implementadas
 
-### Base de datos
+- CRUD básico de preguntas y opciones
+- Asignación de efectos por dimensión a cada opción
+- Asignación de siguiente pregunta por opción
+- Inicio de sesiones de test
+- Respuesta de preguntas con flujo condicional
+- Finalización automática cuando una pregunta es terminal o la opción no tiene siguiente pregunta
+- Cálculo de puntajes brutos, normalizados, score final y clasificación
+- Seeds iniciales con preguntas reales de ejemplo
 
-- PostgreSQL
-- Sistema de preguntas por ID
-- Respuestas con ponderación
+### Endpoints principales
 
-### Lógica del sistema
+- `GET /api/v1/health`
+- `POST /api/v1/admin/questions`
+- `GET /api/v1/admin/questions`
+- `GET /api/v1/admin/questions/{question_id}`
+- `POST /api/v1/admin/questions/{question_id}/options`
+- `POST /api/v1/admin/options/{option_id}/effects`
+- `POST /api/v1/admin/options/{option_id}/next-question`
+- `POST /api/v1/test/sessions`
+- `GET /api/v1/test/sessions/{session_id}/start`
+- `POST /api/v1/test/sessions/{session_id}/answers`
+- `GET /api/v1/test/sessions/{session_id}/result`
 
-- Lógica booleana
-- Sistema de ponderación
-- Evaluación condicional
-- Algoritmo de puntuación
+### Variables de entorno backend
 
----
+Copiar [backend/.env.example](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/.env.example) a `backend/.env`.
 
-## 🏗️ Arquitectura
+```env
+APP_NAME=API de ¿Ahí es?
+API_PREFIX=/api/v1
+DATABASE_URL=postgresql+psycopg2://ahi_es:ahi_es@localhost:5432/ahi_es
+CORS_ORIGINS_RAW=http://localhost:3000
+DIMENSION_MIN_SCORE=-10
+DIMENSION_MAX_SCORE=10
+```
 
-Frontend (NextJS) → API (Python) → PostgreSQL  
- ← Resultado lógico ←
+### Ejecución local del backend
 
----
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+alembic upgrade head
+python scripts/seed.py
+uvicorn app.main:app --reload
+```
 
-## 🧠 Funcionamiento
+## Frontend
 
-El sistema presenta un cuestionario interactivo donde cada respuesta se convierte en una variable lógica.  
-El backend procesa estas respuestas utilizando operadores booleanos y un sistema de ponderación, generando un puntaje final que clasifica al usuario como Green Flag o Red Flag.
+### Pantallas implementadas
+
+- Home con explicación del sistema
+- Vista de test que muestra una pregunta a la vez
+- Vista de resultado con score final, clasificación y barras por dimensión
+
+### Variables de entorno frontend
+
+Copiar [frontend/.env.example](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/frontend/.env.example) a `frontend/.env.local`.
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
+### Ejecución local del frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+## Base de datos y migraciones
+
+La migración inicial ya está incluida en [backend/alembic/versions/20260404_0001_initial_schema.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/alembic/versions/20260404_0001_initial_schema.py).
+
+Comandos útiles:
+
+```bash
+cd backend
+alembic upgrade head
+python scripts/seed.py
+```
+
+## Docker Compose
+
+Para levantar PostgreSQL, backend y frontend juntos:
+
+```bash
+docker compose up --build
+```
+
+Servicios:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:8000`
+- Documentación Swagger: `http://localhost:8000/docs`
+- PostgreSQL: `localhost:5432`
+
+El contenedor del backend ejecuta migraciones y seeds al iniciar.
+
+## Seeds incluidas
+
+Se cargan preguntas de ejemplo como:
+
+- ¿Te responde con constancia y sin desaparecer por días?
+- ¿Cumple lo que promete cuando quedan en algo?
+- ¿Respeta tus límites cuando dices que no o pides espacio?
+- ¿Te busca solo cuando necesita algo de ti?
+- ¿Es claro con sus intenciones contigo?
+
+La definición está en [backend/app/utils/seed_data.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/utils/seed_data.py).
+
+## Notas de diseño
+
+- La lógica pesada está en servicios, no en los endpoints.
+- Los pesos están centralizados y validados en [backend/app/core/scoring.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/core/scoring.py).
+- Las validaciones clave del flujo viven en [backend/app/services/session_service.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/services/session_service.py).
+- El frontend consume la API real con `fetch` desde [frontend/lib/api.ts](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/frontend/lib/api.ts).

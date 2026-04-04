@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ahi_es_postgres
+    environment:
+      POSTGRES_DB: ahi_es
+      POSTGRES_USER: ahi_es
+      POSTGRES_PASSWORD: ahi_es
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ahi_es -d ahi_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ahi_es_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_NAME: API de ¿Ahí es?
+      API_PREFIX: /api/v1
+      DATABASE_URL: postgresql+psycopg2://ahi_es:ahi_es@postgres:5432/ahi_es
+      CORS_ORIGINS_RAW: http://localhost:3000
+      DIMENSION_MIN_SCORE: -10
+      DIMENSION_MAX_SCORE: 10
+    command: >
+      sh -c "alembic upgrade head &&
+      python scripts/seed.py &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ahi_es_frontend
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
