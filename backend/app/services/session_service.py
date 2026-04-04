@@ -76,13 +76,12 @@ def serialize_question(question: Question) -> QuestionDetail:
 
 
 def calculate_session_result(db: Session, session_id: int) -> SessionResult:
-    answers = list(
-        db.scalars(
-            select(SessionAnswer)
-            .where(SessionAnswer.session_id == session_id)
-            .options(joinedload(SessionAnswer.option).joinedload(Option.effects))
-        ).all()
+    statement = (
+        select(SessionAnswer)
+        .where(SessionAnswer.session_id == session_id)
+        .options(joinedload(SessionAnswer.option).joinedload(Option.effects))
     )
+    answers = list(db.execute(statement).unique().scalars().all())
 
     raw_scores = empty_dimension_scores()
     for answer in answers:
