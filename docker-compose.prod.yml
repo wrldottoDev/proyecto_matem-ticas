@@ -66,7 +66,7 @@ services:
       - frontend
       - backend
     ports:
-      - "80:80"
+      - "8085:80"
       - "443:443"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
