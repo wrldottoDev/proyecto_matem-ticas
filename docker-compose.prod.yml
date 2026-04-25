@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ahi_es_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ahi_es}
+      POSTGRES_USER: ${POSTGRES_USER:-ahi_es}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ahi_es} -d ${POSTGRES_DB:-ahi_es}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ahi_es_prod
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ahi_es_backend_prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_NAME: API de ¿Ahí es?
+      API_PREFIX: /api/v1
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-ahi_es}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ahi_es}
+      CORS_ORIGINS_RAW: https://mate.lynqcr.com,http://mate.lynqcr.com
+      DIMENSION_MIN_SCORE: -20
+      DIMENSION_MAX_SCORE: 20
+    command: >
+      sh -c "alembic upgrade head &&
+      python scripts/seed.py &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    expose:
+      - "8000"
+    networks:
+      - ahi_es_prod
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: /api/v1
+    container_name: ahi_es_frontend_prod
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: /api/v1
+    expose:
+      - "3000"
+    networks:
+      - ahi_es_prod
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: ahi_es_caddy_prod
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data_prod:/data
+      - caddy_config_prod:/config
+    networks:
+      - ahi_es_prod
+
+volumes:
+  postgres_data_prod:
+  caddy_data_prod:
+  caddy_config_prod:
+
+networks:
+  ahi_es_prod:
+    driver: bridge

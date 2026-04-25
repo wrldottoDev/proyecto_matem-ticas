@@ -238,6 +238,65 @@ Servicios:
 
 El contenedor del backend ejecuta migraciones y seeds al iniciar.
 
+## Producción
+
+La configuración de producción está preparada para publicar:
+
+```text
+http://mate.lynqcr.com
+```
+
+Con esta estructura:
+
+```text
+/        -> frontend Next.js
+/api/v1  -> backend FastAPI
+/docs    -> documentación Swagger del backend
+```
+
+Archivos de producción:
+
+- [docker-compose.prod.yml](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/docker-compose.prod.yml)
+- [caddy/Caddyfile](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/caddy/Caddyfile)
+- [frontend/Dockerfile.prod](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/frontend/Dockerfile.prod)
+- [.env.prod.example](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/.env.prod.example)
+
+Pasos en el servidor:
+
+```bash
+cp .env.prod.example .env.prod
+```
+
+Editar `.env.prod` y cambiar `POSTGRES_PASSWORD` por una contraseña segura.
+
+Levantar producción:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+```
+
+Ver logs:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f
+```
+
+Apagar:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml down
+```
+
+DNS requerido:
+
+```text
+Tipo: A
+Nombre: mate
+Valor: IP_DEL_SERVIDOR
+```
+
+Caddy expone `80` y `443`, y genera/renueva HTTPS automáticamente para `mate.lynqcr.com` si el DNS apunta al servidor y esos puertos están abiertos.
+
 ## Banco de preguntas
 
 Se carga un banco amplio de preguntas sobre:
