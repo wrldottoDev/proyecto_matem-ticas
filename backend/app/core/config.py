@@ -14,8 +14,8 @@ class Settings(BaseSettings):
         default="postgresql+psycopg2://ahi_es:ahi_es@localhost:5432/ahi_es"
     )
     cors_origins_raw: str = "http://localhost:3000"
-    dimension_min_score: int = -10
-    dimension_max_score: int = 10
+    dimension_min_score: int = -20
+    dimension_max_score: int = 20
 
     model_config = SettingsConfigDict(
         env_file=".env",

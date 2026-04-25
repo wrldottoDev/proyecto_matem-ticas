@@ -10,7 +10,7 @@ const fontSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "¿Ahí es?",
-  description: "Test condicional para evaluar Green Flag, Zona Gris o Red Flag.",
+  description: "Descubrí si tu situación relacional es una Green Flag, una Zona Gris o una Red Flag.",
 };
 
 export default function RootLayout({

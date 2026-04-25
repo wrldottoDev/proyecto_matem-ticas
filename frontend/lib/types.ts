@@ -10,11 +10,16 @@ export type QuestionOption = {
   created_at: string;
   effects: OptionEffect[];
   next_question_id: number | null;
+  activates_contradiction: boolean;
+  contradiction_code: string | null;
+  contradiction_penalty: number;
 };
 
 export type Question = {
   id: number;
+  key: string | null;
   text: string;
+  main_dimension: string | null;
   is_start: boolean;
   is_terminal: boolean;
   created_at: string;
@@ -32,6 +37,16 @@ export type DimensionScores = {
   coherencia: number;
   responsabilidad_afectiva: number;
   interes_real: number;
+  honestidad: number;
+  confianza: number;
+  limites_personales: number;
+  manipulacion: number;
+  celos_control: number;
+  disponibilidad_emocional: number;
+  compromiso: number;
+  empatia: number;
+  resolucion_conflictos: number;
+  reciprocidad: number;
 };
 
 export type SessionResult = {
@@ -40,6 +55,8 @@ export type SessionResult = {
   final_result: "Green Flag" | "Zona Gris" | "Red Flag";
   raw_scores: DimensionScores;
   normalized_scores: DimensionScores;
+  contradiction_count: number;
+  contradictions: string[];
 };
 
 export type NextQuestionPayload = {

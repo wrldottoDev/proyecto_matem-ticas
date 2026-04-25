@@ -14,34 +14,26 @@ export function QuestionCard({
   disabled = false,
 }: QuestionCardProps) {
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-soft backdrop-blur md:p-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600">
-          Paso {step}
-        </span>
-        <span className="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">
-          Cuestionario dinámico
-        </span>
-      </div>
-
+    <section className="animate-fadeIn rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-soft backdrop-blur md:p-8">
       <h2 className="max-w-2xl text-2xl font-semibold leading-tight text-slate-900 md:text-3xl">
         {question.text}
       </h2>
 
-      <div className="mt-8 grid gap-4">
-        {question.options.map((option) => (
+      <div className="mt-8 grid gap-3">
+        {question.options.map((option, index) => (
           <button
             key={option.id}
             type="button"
             disabled={disabled}
             onClick={() => onSelect(option.id)}
-            className="group rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="group rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ animationDelay: `${index * 60}ms` }}
           >
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-base font-medium text-slate-800">{option.text}</span>
-              <span className="text-sm text-slate-400 transition group-hover:text-slate-600">
-                Elegir
+            <div className="flex items-center gap-4">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xs font-semibold text-slate-500 transition group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white">
+                {String.fromCharCode(65 + index)}
               </span>
+              <span className="text-base font-medium text-slate-800">{option.text}</span>
             </div>
           </button>
         ))}

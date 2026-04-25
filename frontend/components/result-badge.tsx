@@ -10,14 +10,21 @@ const styles = {
   "Red Flag": "bg-rose-100 text-rose-800 border-rose-300",
 };
 
+const dots = {
+  "Green Flag": "bg-emerald-500",
+  "Zona Gris": "bg-amber-500",
+  "Red Flag": "bg-rose-500",
+};
+
 export function ResultBadge({ result }: ResultBadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex rounded-full border px-4 py-2 text-sm font-semibold tracking-wide",
+        "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold tracking-wide",
         styles[result],
       )}
     >
+      <span className={clsx("inline-block h-2.5 w-2.5 rounded-full", dots[result])} />
       {result}
     </span>
   );

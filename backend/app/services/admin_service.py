@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -6,14 +7,26 @@ from app.models.question import Question
 
 
 def create_question(
-    db: Session, *, text: str, is_start: bool = False, is_terminal: bool = False
+    db: Session,
+    *,
+    text: str,
+    key: str | None = None,
+    main_dimension: str | None = None,
+    is_start: bool = False,
+    is_terminal: bool = False,
 ) -> Question:
     if is_start:
         existing_start = db.scalar(select(Question).where(Question.is_start.is_(True)))
         if existing_start:
             existing_start.is_start = False
 
-    question = Question(text=text, is_start=is_start, is_terminal=is_terminal)
+    question = Question(
+        key=key,
+        text=text,
+        main_dimension=main_dimension,
+        is_start=is_start,
+        is_terminal=is_terminal,
+    )
     db.add(question)
     db.commit()
     db.refresh(question)
@@ -25,7 +38,7 @@ def list_questions(db: Session) -> list[Question]:
     return list(db.scalars(statement).all())
 
 
-def get_question_or_404(db: Session, question_id: int) -> Question | None:
+def get_question_or_404(db: Session, question_id: int) -> Question:
     statement = (
         select(Question)
         .where(Question.id == question_id)
@@ -35,11 +48,28 @@ def get_question_or_404(db: Session, question_id: int) -> Question | None:
             joinedload(Question.options).joinedload(Option.next_question_link),
         )
     )
-    return db.scalars(statement).unique().one_or_none()
+    question = db.scalars(statement).unique().one_or_none()
+    if not question:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pregunta no encontrada")
+    return question
 
 
-def create_option(db: Session, *, question: Question, text: str) -> Option:
-    option = Option(question_id=question.id, text=text)
+def create_option(
+    db: Session,
+    *,
+    question: Question,
+    text: str,
+    activates_contradiction: bool = False,
+    contradiction_code: str | None = None,
+    contradiction_penalty: int = 0,
+) -> Option:
+    option = Option(
+        question_id=question.id,
+        text=text,
+        activates_contradiction=activates_contradiction,
+        contradiction_code=contradiction_code,
+        contradiction_penalty=contradiction_penalty,
+    )
     db.add(option)
     db.commit()
     db.refresh(option)

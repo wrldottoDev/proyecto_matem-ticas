@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.enums import FinalResult
 
@@ -29,6 +29,16 @@ class DimensionScores(BaseModel):
     coherencia: float
     responsabilidad_afectiva: float
     interes_real: float
+    honestidad: float
+    confianza: float
+    limites_personales: float
+    manipulacion: float
+    celos_control: float
+    disponibilidad_emocional: float
+    compromiso: float
+    empatia: float
+    resolucion_conflictos: float
+    reciprocidad: float
 
 
 class SessionResult(BaseModel):
@@ -37,6 +47,8 @@ class SessionResult(BaseModel):
     final_result: FinalResult
     raw_scores: DimensionScores
     normalized_scores: DimensionScores
+    contradiction_count: int = 0
+    contradictions: list[str] = Field(default_factory=list)
 
 
 from app.schemas.question import QuestionDetail

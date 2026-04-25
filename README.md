@@ -44,23 +44,39 @@ Dimensiones:
 - `coherencia`
 - `responsabilidad_afectiva`
 - `interes_real`
+- `honestidad`
+- `confianza`
+- `limites_personales`
+- `manipulacion`
+- `celos_control`
+- `disponibilidad_emocional`
+- `compromiso`
+- `empatia`
+- `resolucion_conflictos`
+- `reciprocidad`
 
 Pesos:
 
-- `comunicacion = 0.20`
-- `respeto = 0.25`
-- `coherencia = 0.20`
-- `responsabilidad_afectiva = 0.25`
-- `interes_real = 0.10`
+- `comunicacion = 0.07`
+- `respeto = 0.08`
+- `coherencia = 0.07`
+- `responsabilidad_afectiva = 0.08`
+- `interes_real = 0.06`
+- `honestidad = 0.07`
+- `confianza = 0.08`
+- `limites_personales = 0.07`
+- `manipulacion = 0.08`
+- `celos_control = 0.06`
+- `disponibilidad_emocional = 0.06`
+- `compromiso = 0.06`
+- `empatia = 0.06`
+- `resolucion_conflictos = 0.05`
+- `reciprocidad = 0.05`
 
 Fórmula:
 
 ```text
-F = (comunicacion_normalizada * 0.20)
-  + (respeto_normalizado * 0.25)
-  + (coherencia_normalizada * 0.20)
-  + (responsabilidad_afectiva_normalizada * 0.25)
-  + (interes_real_normalizado * 0.10)
+F = suma(dimension_normalizada * peso_dimension)
 ```
 
 Clasificación:
@@ -71,6 +87,49 @@ Clasificación:
 
 La normalización se centraliza en [backend/app/core/config.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/core/config.py) mediante `DIMENSION_MIN_SCORE` y `DIMENSION_MAX_SCORE`, para que el rango sea fácil de ajustar.
 
+Las opciones usan efectos proporcionales:
+
+- Green flags fuertes: `+4` a `+6`
+- Green flags moderadas: `+2` a `+3`
+- Neutras o dudosas: `0` a `-1`
+- Red flags moderadas: `-3` a `-5`
+- Red flags fuertes: `-6` a `-10`
+- Contradicciones graves: penalización adicional de `-5` a `-10` aplicada a `confianza`
+
+## Grafo del cuestionario
+
+El test funciona como un grafo dirigido:
+
+- Cada pregunta es un nodo con `key`, `text`, `main_dimension` e indicadores `is_start` / `is_terminal`.
+- Cada opción es una arista potencial: suma/resta efectos y puede apuntar a otra pregunta mediante `next`.
+- El enlace persistido en base de datos está en `option_next_questions`.
+- Si la pregunta es terminal o la opción no tiene siguiente pregunta, la sesión termina.
+
+Relaciones conceptuales implementadas:
+
+- Honestidad -> Confianza
+- Comunicación -> Resolución de conflictos
+- Respeto -> Límites personales
+- Manipulación -> Confianza negativa
+- Celos/control -> Respeto negativo
+- Ghosting -> Interés real negativo
+- Responsabilidad afectiva -> Estabilidad del vínculo
+- Coherencia -> Confianza
+- Evasión -> Comunicación negativa
+- Reciprocidad -> Interés real
+- Empatía -> Resolución de conflictos
+
+El grafo profundiza según las respuestas. Por ejemplo:
+
+- Falta de comunicación -> ghosting -> interés real -> responsabilidad afectiva
+- Honestidad dudosa -> confianza -> manipulación
+- Celos/control -> privacidad/límites -> manipulación o alerta fuerte
+- Respuestas positivas consistentes -> confirmación Green Flag
+- Respuestas mixtas -> confirmación Zona Gris
+- Alertas fuertes -> terminal Red Flag
+
+La detección de contradicciones vive en los metadatos de opción: `activates_contradiction`, `contradiction_code` y `contradiction_penalty`. El cálculo está en [backend/app/services/session_service.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/services/session_service.py).
+
 ## Backend
 
 ### Funcionalidades implementadas
@@ -78,6 +137,7 @@ La normalización se centraliza en [backend/app/core/config.py](/Users/ottogonza
 - CRUD básico de preguntas y opciones
 - Asignación de efectos por dimensión a cada opción
 - Asignación de siguiente pregunta por opción
+- Detección de contradicciones declaradas por opción
 - Inicio de sesiones de test
 - Respuesta de preguntas con flujo condicional
 - Finalización automática cuando una pregunta es terminal o la opción no tiene siguiente pregunta
@@ -107,8 +167,8 @@ APP_NAME=API de ¿Ahí es?
 API_PREFIX=/api/v1
 DATABASE_URL=postgresql+psycopg2://ahi_es:ahi_es@localhost:5432/ahi_es
 CORS_ORIGINS_RAW=http://localhost:3000
-DIMENSION_MIN_SCORE=-10
-DIMENSION_MAX_SCORE=10
+DIMENSION_MIN_SCORE=-20
+DIMENSION_MAX_SCORE=20
 ```
 
 ### Ejecución local del backend
@@ -178,17 +238,34 @@ Servicios:
 
 El contenedor del backend ejecuta migraciones y seeds al iniciar.
 
-## Seeds incluidas
+## Banco de preguntas
 
-Se cargan preguntas de ejemplo como:
+Se carga un banco amplio de preguntas sobre:
 
-- ¿Te responde con constancia y sin desaparecer por días?
-- ¿Cumple lo que promete cuando quedan en algo?
-- ¿Respeta tus límites cuando dices que no o pides espacio?
-- ¿Te busca solo cuando necesita algo de ti?
-- ¿Es claro con sus intenciones contigo?
+- Comunicación constante y ghosting
+- Honestidad, confianza y coherencia
+- Respeto de límites y privacidad
+- Responsabilidad afectiva
+- Claridad de intenciones y compromiso
+- Interés real y reciprocidad
+- Manipulación emocional
+- Celos/control
+- Empatía y resolución de conflictos
+- Dependencia e inmadurez emocional
+- Señales sanas, zona gris y alertas fuertes
 
 La definición está en [backend/app/utils/seed_data.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/utils/seed_data.py).
+
+El seeder [backend/app/services/seed_service.py](/Users/ottogonzalez/Documents/mate1/proyecto/ahi_es/backend/app/services/seed_service.py) crea primero todos los nodos y después resuelve las aristas `next`, para permitir que una opción apunte a preguntas definidas más adelante.
+
+## Pruebas
+
+```bash
+cd backend
+pytest
+```
+
+Las pruebas básicas validan carga del grafo, una ruta Green Flag y una ruta con contradicción.
 
 ## Notas de diseño
 

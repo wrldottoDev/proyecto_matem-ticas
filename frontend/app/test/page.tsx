@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -69,21 +70,22 @@ export default function TestPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-10 md:px-10">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-            Test en curso
+          <h1 className="text-3xl font-semibold text-slate-950">¿Ahí es?</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Pregunta {step}
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-950">¿Ahí es?</h1>
         </div>
-        {sessionId ? (
-          <span className="rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
-            Sesión #{sessionId}
-          </span>
-        ) : null}
+        <Link
+          href="/"
+          className="rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm font-medium text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+        >
+          Salir
+        </Link>
       </div>
 
       <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/80">
         <div
-          className="h-full rounded-full bg-slate-900 transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-slate-800 to-slate-600 transition-all duration-500"
           style={{ width: `${Math.min(20 + step * 12, 100)}%` }}
         />
       </div>
@@ -102,9 +104,10 @@ export default function TestPage() {
           disabled={isSubmitting}
         />
       ) : (
-        <section className="rounded-[2rem] border border-slate-200 bg-white/85 p-10 text-center shadow-soft backdrop-blur">
+        <section className="flex flex-col items-center rounded-[2rem] border border-slate-200 bg-white/85 p-10 shadow-soft backdrop-blur">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-[3px] border-slate-200 border-t-slate-700" />
           <p className="text-lg font-medium text-slate-700">
-            {error ? "No fue posible cargar el cuestionario." : "Preparando tu evaluación..."}
+            {error ? "No fue posible cargar las preguntas." : "Preparando tu evaluación..."}
           </p>
         </section>
       )}

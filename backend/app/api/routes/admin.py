@@ -31,7 +31,9 @@ router = APIRouter()
 def create_question_endpoint(payload: QuestionCreate, db: Session = Depends(get_db)) -> Question:
     return create_question(
         db,
+        key=payload.key,
         text=payload.text,
+        main_dimension=payload.main_dimension.value if payload.main_dimension else None,
         is_start=payload.is_start,
         is_terminal=payload.is_terminal,
     )
@@ -45,8 +47,6 @@ def list_questions_endpoint(db: Session = Depends(get_db)) -> list[Question]:
 @router.get("/questions/{question_id}", response_model=QuestionDetail)
 def get_question_endpoint(question_id: int, db: Session = Depends(get_db)) -> QuestionDetail:
     question = get_question_or_404(db, question_id)
-    if not question:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pregunta no encontrada")
     return serialize_question(question)
 
 
@@ -61,13 +61,23 @@ def create_option_endpoint(
     question = db.get(Question, question_id)
     if not question:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pregunta no encontrada")
-    option = create_option(db, question=question, text=payload.text)
+    option = create_option(
+        db,
+        question=question,
+        text=payload.text,
+        activates_contradiction=payload.activates_contradiction,
+        contradiction_code=payload.contradiction_code,
+        contradiction_penalty=payload.contradiction_penalty,
+    )
     return OptionDetail(
         id=option.id,
         text=option.text,
         created_at=option.created_at,
         effects=[],
         next_question_id=None,
+        activates_contradiction=option.activates_contradiction,
+        contradiction_code=option.contradiction_code,
+        contradiction_penalty=option.contradiction_penalty,
     )
 
 

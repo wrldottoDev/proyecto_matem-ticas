@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -41,5 +41,10 @@ def answer_question_endpoint(
 
 @router.get("/sessions/{session_id}/result", response_model=SessionResult)
 def session_result_endpoint(session_id: int, db: Session = Depends(get_db)) -> SessionResult:
-    get_session_or_404(db, session_id)
+    session = get_session_or_404(db, session_id)
+    if not session.finished_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La sesión aún no ha finalizado",
+        )
     return calculate_session_result(db, session_id)

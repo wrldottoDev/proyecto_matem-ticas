@@ -30,8 +30,8 @@ services:
       API_PREFIX: /api/v1
       DATABASE_URL: postgresql+psycopg2://ahi_es:ahi_es@postgres:5432/ahi_es
       CORS_ORIGINS_RAW: http://localhost:3000
-      DIMENSION_MIN_SCORE: -10
-      DIMENSION_MAX_SCORE: 10
+      DIMENSION_MIN_SCORE: -20
+      DIMENSION_MAX_SCORE: 20
     command: >
       sh -c "alembic upgrade head &&
       python scripts/seed.py &&

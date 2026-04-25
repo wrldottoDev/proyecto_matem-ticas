@@ -56,7 +56,9 @@ def serialize_question(question: Question) -> QuestionDetail:
     ordered_options = sorted(question.options, key=lambda option: option.id)
     return QuestionDetail(
         id=question.id,
+        key=question.key,
         text=question.text,
+        main_dimension=question.main_dimension,
         is_start=question.is_start,
         is_terminal=question.is_terminal,
         created_at=question.created_at,
@@ -69,6 +71,9 @@ def serialize_question(question: Question) -> QuestionDetail:
                 next_question_id=(
                     option.next_question_link.next_question_id if option.next_question_link else None
                 ),
+                activates_contradiction=option.activates_contradiction,
+                contradiction_code=option.contradiction_code,
+                contradiction_penalty=option.contradiction_penalty,
             )
             for option in ordered_options
         ],
@@ -84,9 +89,15 @@ def calculate_session_result(db: Session, session_id: int) -> SessionResult:
     answers = list(db.execute(statement).unique().scalars().all())
 
     raw_scores = empty_dimension_scores()
+    contradictions: list[str] = []
     for answer in answers:
         for effect in answer.option.effects:
             raw_scores[Dimension(effect.dimension)] += effect.value
+        if answer.option.activates_contradiction:
+            contradictions.append(answer.option.contradiction_code or f"option:{answer.option_id}")
+            # A contradiction is modeled as an extra trust penalty so it changes the final score
+            # without requiring a separate endpoint or response contract.
+            raw_scores[Dimension.confianza] += answer.option.contradiction_penalty
 
     normalized = normalize_dimensions(raw_scores)
     final_score = calculate_final_score(normalized)
@@ -100,6 +111,8 @@ def calculate_session_result(db: Session, session_id: int) -> SessionResult:
         normalized_scores=DimensionScores(
             **{dimension.value: value for dimension, value in normalized.items()}
         ),
+        contradiction_count=len(contradictions),
+        contradictions=contradictions,
     )
 
 

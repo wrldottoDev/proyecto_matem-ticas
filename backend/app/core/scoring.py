@@ -4,11 +4,21 @@ from app.core.config import settings
 from app.core.enums import Dimension, FinalResult
 
 DIMENSION_WEIGHTS: dict[Dimension, float] = {
-    Dimension.comunicacion: 0.20,
-    Dimension.respeto: 0.25,
-    Dimension.coherencia: 0.20,
-    Dimension.responsabilidad_afectiva: 0.25,
-    Dimension.interes_real: 0.10,
+    Dimension.comunicacion: 0.07,
+    Dimension.respeto: 0.08,
+    Dimension.coherencia: 0.07,
+    Dimension.responsabilidad_afectiva: 0.08,
+    Dimension.interes_real: 0.06,
+    Dimension.honestidad: 0.07,
+    Dimension.confianza: 0.08,
+    Dimension.limites_personales: 0.07,
+    Dimension.manipulacion: 0.08,
+    Dimension.celos_control: 0.06,
+    Dimension.disponibilidad_emocional: 0.06,
+    Dimension.compromiso: 0.06,
+    Dimension.empatia: 0.06,
+    Dimension.resolucion_conflictos: 0.05,
+    Dimension.reciprocidad: 0.05,
 }
 
 
@@ -48,7 +58,7 @@ def calculate_final_score(normalized_scores: Mapping[Dimension, float]) -> float
         2,
     )
 
-
+# Final
 def classify_score(score: float) -> FinalResult:
     if score >= 70:
         return FinalResult.green_flag
